@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from .models import ChatMessage
+
+
 def index(request):
     return render(request, 'chatapp/index.html', {})
 

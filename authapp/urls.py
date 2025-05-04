@@ -12,6 +12,5 @@ urlpatterns = [
     path('home/',Home.as_view(),name='home')
 
     
-
 ]
 
