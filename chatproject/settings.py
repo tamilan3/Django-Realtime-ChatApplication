@@ -12,83 +12,87 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 
+from decouple import Csv, config
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEMPLATES_DIR = os.path.join(BASE_DIR,"chatapp/template")
-STATIC_DIR = os.path.join(BASE_DIR,"chatapp/static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "chatapp/template")
+STATIC_DIR = os.path.join(BASE_DIR, "chatapp/static")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '4b(pcan3hoco_2m$twi-a$7-p9^-xb3s6=3-@319^28w7+@j3@'
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = ['4d9a-121-200-51-234.ngrok-free.app', 'localhost', '127.0.0.1']
+DEBUG = config("DEBUG", default=False)
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://4d9a-121-200-51-234.ngrok-free.app',
-]
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
-CORS_ALLOWED_ORIGINS = [
-    'https://4d9a-121-200-51-234.ngrok-free.app',
-]
-CROSS_ORIGIN_ALLOW_ALL = True
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS", default="http://localhost,http://127.0.0.1", cast=Csv()
+)
+
+CORS_ALLOWED_ORIGINS = config(
+    "CORS_ALLOWED_ORIGINS", default="http://localhost,http://127.0.0.1", cast=Csv()
+)
+
+CROSS_ORIGIN_ALLOW_ALL = config("CROSS_ORIGIN_ALLOW_ALL", default=False, cast=bool)
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # Application definition
 
 INSTALLED_APPS = [
-    'channels',
-    'daphne',
-    'crispy_forms',
-    'crispy_bootstrap4',
-    'bootstrap4',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'authapp',
-    'chatapp'
+    "channels",
+    "daphne",
+    "crispy_forms",
+    "crispy_bootstrap4",
+    "bootstrap4",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "authapp",
+    "chatapp",
 ]
 
 ASGI_APPLICATION = "chatproject.asgi.application"
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
         },
     },
 }
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'chatproject.urls'
+ROOT_URLCONF = "chatproject.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [TEMPLATES_DIR],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [TEMPLATES_DIR],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -97,33 +101,87 @@ TEMPLATES = [
 # WSGI_APPLICATION = 'chatproject.wsgi.application'
 
 
-
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    "default": {
+        "ENGINE": config("DB_ENGINE", default="django.db.backends.sqlite3"),
+        "NAME": config("DB_NAME", default=os.path.join(BASE_DIR, "db.sqlite3")),
+        "USER": config("DB_USER", default=""),
+        "PASSWORD": config("DB_PASSWORD", default=""),
+        "HOST": config("DB_HOST", default=""),
+        "PORT": config("DB_PORT", default=""),
     }
 }
 
+# Email Configuration
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = config("EMAIL_HOST", default="")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@example.com")
+
+# Redis Configuration for Channels
+REDIS_HOST = config("REDIS_HOST", default="127.0.0.1")
+REDIS_PORT = config("REDIS_PORT", default=6379, cast=int)
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
+        },
+    },
+}
+
+# Media Files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# Static Files
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [STATIC_DIR]
+
+# Security Settings
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
+SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
+CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
+SECURE_BROWSER_XSS_FILTER = config("SECURE_BROWSER_XSS_FILTER", default=True, cast=bool)
+SECURE_CONTENT_TYPE_NOSNIFF = config(
+    "SECURE_CONTENT_TYPE_NOSNIFF", default=True, cast=bool
+)
+
+# Authentication Settings
+AUTH_USER_MODEL = "authapp.CustomUser"
+LOGIN_REDIRECT_URL = "index"
+LOGOUT_REDIRECT_URL = "login"
+LOGIN_URL = "login"
+
+# Form Settings
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -131,9 +189,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -144,13 +202,11 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
-STATICFILES_DIRS = [
-    STATIC_DIR
-]
-STATIC_URL = '/static/'
+STATICFILES_DIRS = [STATIC_DIR]
+STATIC_URL = "/static/"
 # AUTH_USER_MODEL = 'authapp.CustomUser'
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = "index"

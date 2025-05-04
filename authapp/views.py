@@ -1,104 +1,101 @@
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib import messages
+"""Authentication views module.
+
+This module contains views for handling user authentication, registration,
+and profile management.
+"""
+
+from django.conf import settings
+from django.contrib.auth import logout
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView
 from django.core.mail import send_mail
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from django.views import View
-from django.contrib.auth.views import LoginView, LogoutView
-from django.views.generic.edit import CreateView,UpdateView
-from .CustomeForms import EmailAuthenticationForm, CustomUserCreationForm
-from .models import CustomUser
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.views import View
+from django.views.generic.edit import CreateView, UpdateView
+
+from .CustomeForms import CustomUserCreationForm, EmailAuthenticationForm
+from .models import CustomUser
+
 
 class CustomLoginView(LoginView):
+    """View for handling user login with email authentication."""
+
     authentication_form = EmailAuthenticationForm
-    template_name = 'authapp/login.html' 
-    success_url = reverse_lazy('index')
-    
-# class CustomLogoutView(LogoutView):
-#     pass
+    template_name = "authapp/login.html"
+    success_url = reverse_lazy("index")
+
 
 class CustomRegisterView(CreateView):
+    """View for handling new user registration."""
+
     form_class = CustomUserCreationForm
-    template_name = 'authapp/register.html'  
-    success_url = 'login'  
+    template_name = "authapp/register.html"
+    success_url = reverse_lazy("login")
 
-
-
-# class LoginView(View):
-#     def get(self, request):
-#         form = AuthenticationForm()
-#         return render(request, 'authapp/login.html', {'form': form})
-
-#     def post(self, request):
-#         form = AuthenticationForm(request, request.POST)
-#         if form.is_valid():
-#             username = form.cleaned_data.get('username')
-#             password = form.cleaned_data.get('password')
-#             user = authenticate(username=username, password=password)
-#             if user is not None:
-#                 login(request, user)
-#                 return redirect('index')  # Redirect to your desired URL after login
-#             else:
-#                 messages.error(request, 'Invalid username or password.')
-#         return render(request, 'authapp/login.html', {'form': form})
 
 class LogoutView(View):
+    """View for handling user logout."""
+
     def get(self, request):
+        """Handle GET request to log out user."""
         logout(request)
-        return redirect('login')  # Redirect to login page after logout
+        return redirect("login")
 
-# class RegisterView(View):
-#     def get(self, request):
-#         form = UserCreationForm()
-#         return render(request, 'authapp/register.html', {'form': form})
-
-#     def post(self, request):
-#         form = UserCreationForm(request.POST)
-#         if form.is_valid():
-#             user = form.save()
-#             login(request, user)
-#             return redirect('login')  # Redirect to your desired URL after registration/login
-#         return render(request, 'authapp/register.html', {'form': form})
 
 class AboutView(View):
-    def get(self, request):
-        return render(request, 'authapp/about.html')
+    """View for about page."""
 
-class ContactView(View):
     def get(self, request):
-        return render(request, 'authapp/contact.html')
+        """Handle GET request for about page."""
+        return render(request, "authapp/about.html")
+
+
+class ContactView(LoginRequiredMixin, View):
+    """View for contact form."""
+
+    login_url = "/auth/login/"  # Redirect to login page if not authenticated
+
+    def get(self, request):
+        """Handle GET request for contact form."""
+        return render(request, "authapp/contact.html")
 
     def post(self, request):
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        message = request.POST.get('message')
+        """Handle POST request for contact form submission."""
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        message = request.POST.get("message")
 
-        # Send email using send_mail() function
         send_mail(
-            'Subject: Contact Form Submission',  # Email subject
-            f'Name: {name}\nEmail: {email}\nMessage: {message}',  # Email body
-            'your_email@example.com',  # Sender's email address (replace with yours)
-            ['destination@example.com'],  # List of recipient(s) email address
-            fail_silently=False,  # Set to True to fail silently (no error raised)
+            f"Contact Form Submission from {name}",
+            f"Name: {name}\nEmail: {email}\nMessage: {message}",
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.CONTACT_FORM_RECIPIENT],
+            fail_silently=False,
         )
-        print(name, email, message)
 
-        return HttpResponse("Thank you! We've received your message and sent an email.")
+        return HttpResponse("Thank you! We've received your message.")
 
 
-class ProfileUpdateView(UpdateView):
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
+    """View for updating user profile."""
+
+    login_url = "/auth/login/"
     model = CustomUser
-    fields = ['username', 'gender', 'profile_pic', 'address']
-    template_name = 'authapp/profile.html'
-    success_url = reverse_lazy('profile')  # Update with your success URL name
-    context_object_name = 'user_profile'
+    fields = ["username", "gender", "profile_pic", "address"]
+    template_name = "authapp/profile.html"
+    success_url = reverse_lazy("profile")
+    context_object_name = "user_profile"
 
     def get_object(self, queryset=None):
+        """Return the current user's profile."""
         return self.request.user
-    
+
 
 class Home(View):
+    """View for home page."""
+
     def get(self, request):
-        return render(request, 'authapp/home.html')
+        """Handle GET request for home page."""
+        return render(request, "authapp/home.html")

@@ -12,6 +12,26 @@ A real-time chat application built with Django and Django Channels, featuring vi
 - Online User Status
 - Responsive Design
 
+## Screenshots
+
+Here are some screenshots of the application in action:
+
+### Chat Room Interface
+![Chat Room Interface](/demo/chat.png)
+*Chat room interface showing real-time messaging and online users*
+
+### Video Call Feature
+![Video Call](/demo/videocall.png)
+*One-on-one video call interface with controls*
+
+### User Authentication
+![Login Screen](/demo/login.png)
+*User login screen with email authentication*
+
+### Room Creation
+![Room Creation](/demo/room.png)
+*Create or join chat rooms with persistent history*
+
 ## Tech Stack
 
 - Django 5.0.6

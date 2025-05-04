@@ -1,9 +1,16 @@
+"""Chat application URL configuration.
+
+This module defines the URL patterns for chat room and video call views.
+"""
+
 from django.urls import path
+
 from . import views
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('<str:room_name>/', views.chat_room, name='room'),
-    # path('chat/<str:room_name>/detail/', views.chat_detail, name='chat_detail'),
-    path("video-chat/<str:room_name>/", views.video_chat, name="video_call"),
+    path("", views.IndexView.as_view(), name="index"),
+    path("chat/<str:room_name>/", views.ChatRoomView.as_view(), name="room"),
+    path(
+        "video-chat/<str:room_name>/", views.VideoChatView.as_view(), name="video_call"
+    ),
 ]
