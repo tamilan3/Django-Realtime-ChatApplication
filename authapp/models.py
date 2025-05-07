@@ -48,16 +48,23 @@ class CustomUser(AbstractUser):
 
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=20, null=True)
-    user_type = models.CharField(default=1, choices=USER_TYPE, max_length=1)
-    gender = models.CharField(max_length=1, choices=GENDER)
-    profile_pic = models.ImageField()
-    address = models.TextField()
+    user_type = models.CharField(default=1, choices=USER_TYPE, max_length=1, null=True, blank=True)
+    gender = models.CharField(max_length=1, choices=GENDER, null=True, blank=True)
+    profile_pic = models.ImageField(
+        upload_to="profile_pics/",
+        null=True,
+        blank=True,
+        default="profile_pics/default.png",
+        help_text="Profile picture (optional)"
+    )
+    address = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = CustomUserManager()
 
-    REQUIRED_FIELDS = ["username", "user_type", "gender", "profile_pic", "address"]
     USERNAME_FIELD = "email"
+    # Make email the only required field
+    REQUIRED_FIELDS = []
 
     groups = models.ManyToManyField(
         Group, verbose_name="groups", blank=True, related_name="custom_user_groups"
@@ -72,4 +79,6 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         """Return a string representation of the user."""
-        return f"{self.last_name}, {self.first_name}"
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.email

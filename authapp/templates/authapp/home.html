@@ -1,11 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-</head>
-<body>
-    Welcome to Chat Application
-</body>
-</html>
+{% extends "authapp/base.html" %}
+{% block content %}
+<div class="content-section">
+    <div class="text-center mb-4">
+        <i class="fas fa-comments fa-4x text-primary mb-3"></i>
+        <h1>Welcome to Real-Time Chat</h1>
+        <p class="lead text-muted">A modern platform for seamless communication</p>
+    </div>
+
+    <div class="features mt-5">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <i class="fas fa-comments fa-2x text-primary mb-3"></i>
+                    <h4>Real-Time Chat</h4>
+                    <p class="text-muted">Instant messaging with real-time updates</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <i class="fas fa-video fa-2x text-primary mb-3"></i>
+                    <h4>Video Calls</h4>
+                    <p class="text-muted">High-quality video conversations</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <i class="fas fa-user-shield fa-2x text-primary mb-3"></i>
+                    <h4>Secure</h4>
+                    <p class="text-muted">End-to-end encrypted communication</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        {% if user.is_authenticated %}
+            <a href="{% url 'chat:index' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-comments mr-2"></i>Go to Chat Rooms
+            </a>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg mr-3">
+                <i class="fas fa-sign-in-alt mr-2"></i>Login
+            </a>
+            <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-user-plus mr-2"></i>Register
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

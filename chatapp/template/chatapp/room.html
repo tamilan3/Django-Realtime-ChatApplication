@@ -24,7 +24,12 @@
                         </div>
 
                         <div class="users-section">
-                            <h6 class="text-muted mb-3">ONLINE USERS (<span id="online-count">0</span>)</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-muted mb-0">ONLINE USERS (<span id="online-count">0</span>)</h6>
+                                <small class="text-muted">
+                                    <span id="connection-count">0</span>/<span id="max-connections">5</span>
+                                </small>
+                            </div>
                             <div id="online-users-list">
                                 <!-- Online users will be populated dynamically -->
                             </div>
@@ -116,6 +121,9 @@
         const username = '{{ username }}';
         let isDarkMode = false;
         let typingTimeout = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let reconnectInterval = 1000; // Start with 1 second
 
         function scrollToBottom() {
             const chatMessages = document.getElementById('chat-messages');
@@ -145,43 +153,116 @@
                 '/ws/chat/' + roomName + '/'
             );
 
-            chatSocket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
+            chatSocket.onopen = function() {
+                console.log('WebSocket connected');
+                reconnectAttempts = 0;
+                reconnectInterval = 1000;
+                showError('Connected to chat server', 'success');
+            };
 
-                if (data.type === 'user_list_update') {
-                    updateOnlineUsers(data.users);
-                    return;
-                }
-
-                if (data.typing) {
-                    handleTypingIndicator(data.username);
-                    return;
-                }
-
-                const chatMessages = document.getElementById('chat-messages');
-                const messageDiv = document.createElement('div');
-                const isOwnMessage = data.username === username;
-
-                messageDiv.className = 'message' + (isOwnMessage ? ' own' : '');
-                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                messageDiv.innerHTML = `
-                    <div class="message-content">
-                        ${!isOwnMessage ? `<div class="message-header mb-1"><strong>${data.username}</strong></div>` : ''}
-                        ${data.message}
-                        <small class="message-time d-block ${isOwnMessage ? 'text-white-50' : 'text-muted'} mt-1">
-                            ${time}
-                        </small>
-                    </div>`;
-
-                chatMessages.appendChild(messageDiv);
-                scrollToBottom();
-
-                // Clear typing indicator when message is received
-                if (data.username !== username) {
-                    clearTypingIndicator();
+            chatSocket.onclose = function(e) {
+                console.log('WebSocket closed:', e);
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    showError('Connection lost. Reconnecting...', 'warning');
+                    setTimeout(() => {
+                        reconnectAttempts++;
+                        reconnectInterval *= 2; // Exponential backoff
+                        initWebSocket(roomName);
+                    }, reconnectInterval);
+                } else {
+                    showError('Could not connect to chat server. Please refresh the page.', 'error');
                 }
             };
+
+            chatSocket.onerror = function(e) {
+                console.error('WebSocket error:', e);
+                showError('Error connecting to chat server', 'error');
+            };
+
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log('Received message:', data);
+
+                switch(data.type) {
+                    case "room_state":
+                        updateOnlineUsers(data.users);
+                        updateConnectionInfo(data.connection_count, data.max_connections);
+                        break;
+                        
+                    case "message":
+                        appendMessage(data.message, data.username, data.timestamp);
+                        clearTypingIndicator();
+                        break;
+                        
+                    case "typing":
+                        handleTypingIndicator(data.username);
+                        break;
+                        
+                    case "error":
+                        showError(data.message, 'error');
+                        break;
+                }
+            };
+        }
+
+        function updateConnectionInfo(count, max) {
+            document.getElementById('connection-count').textContent = count;
+            document.getElementById('max-connections').textContent = max;
+            
+            // Disable/enable video call button based on capacity
+            const videoCallBtn = document.querySelector('button[onclick="startVideoCall()"]');
+            if (count >= max) {
+                videoCallBtn.disabled = true;
+                videoCallBtn.title = 'Room is full';
+            } else {
+                videoCallBtn.disabled = false;
+                videoCallBtn.title = 'Start Video Call';
+            }
+        }
+
+        function appendMessage(message, username, timestamp) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            const isOwnMessage = username === '{{ username }}';
+
+            messageDiv.className = 'message' + (isOwnMessage ? ' own' : '');
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${!isOwnMessage ? `<div class="message-header mb-1"><strong>${username}</strong></div>` : ''}
+                    ${message}
+                    <small class="message-time d-block ${isOwnMessage ? 'text-white-50' : 'text-muted'} mt-1">
+                        ${timestamp}
+                    </small>
+                </div>`;
+
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showError(message, type = 'error') {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'error' ? 'danger' : 
+                             type === 'success' ? 'success' : 
+                             type === 'warning' ? 'warning' : 'info'} alert-dismissible fade show`;
+            toast.style.position = 'fixed';
+            toast.style.top = '20px';
+            toast.style.right = '20px';
+            toast.style.zIndex = '1050';
+            toast.style.maxWidth = '90%';
+            toast.style.width = '350px';
+            
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 
+                                  type === 'success' ? 'check-circle' : 
+                                  type === 'warning' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
         }
 
         function handleTypingIndicator(typingUser) {
@@ -208,17 +289,26 @@
             const message = messageInput.value.trim();
 
             if (message !== '') {
-                chatSocket.send(JSON.stringify({
-                    'message': message,
-                    'username': username,
-                }));
-                messageInput.value = '';
-                clearTypingIndicator();
+                if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                    try {
+                        chatSocket.send(JSON.stringify({
+                            'message': message,
+                            'username': username,
+                        }));
+                        messageInput.value = '';
+                        clearTypingIndicator();
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        showError('Failed to send message. Please try again.', 'error');
+                    }
+                } else {
+                    showError('Chat connection is not available. Please wait...', 'warning');
+                }
             }
         }
 
         function startVideoCall() {
-            window.location.href = '/video-chat/' + '{{ room_name }}';
+            window.location.href = "{% url 'chat:video_call' room_name %}";
         }
 
         function clearChat() {

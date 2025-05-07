@@ -24,7 +24,15 @@ class CustomLoginView(LoginView):
 
     authentication_form = EmailAuthenticationForm
     template_name = "authapp/login.html"
-    success_url = reverse_lazy("index")
+
+    def get_success_url(self):
+        """Return the success URL after login."""
+        return settings.LOGIN_REDIRECT_URL
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('chat:index')
+        return super().dispatch(request, *args, **kwargs)
 
 
 class CustomRegisterView(CreateView):
@@ -33,6 +41,11 @@ class CustomRegisterView(CreateView):
     form_class = CustomUserCreationForm
     template_name = "authapp/register.html"
     success_url = reverse_lazy("login")
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('chat:index')  # Update to use namespaced URL
+        return super().dispatch(request, *args, **kwargs)
 
 
 class LogoutView(View):
@@ -91,6 +104,18 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         """Return the current user's profile."""
         return self.request.user
+
+    def form_valid(self, form):
+        """Process the form if valid."""
+        # Delete old profile picture if it exists and a new one is uploaded
+        if form.cleaned_data.get("profile_pic"):
+            old_pic = self.get_object().profile_pic
+            if old_pic and old_pic.name != "profile_pics/default.png":
+                try:
+                    old_pic.delete(save=False)
+                except Exception:
+                    pass  # Don't fail if file is missing
+        return super().form_valid(form)
 
 
 class Home(View):

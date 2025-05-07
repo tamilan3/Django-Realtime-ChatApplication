@@ -1,10 +1,17 @@
 {% extends "authapp/base.html" %}
 {% load crispy_forms_tags %}
+{% load static %}
 {% block content %}
     <div class="content-section">
         <div class="text-center mb-4">
             <div class="profile-image-container mb-3">
-                <img class="account-img" src="{{ user.profile_pic.url }}" alt="Profile Picture">
+                {% if user.profile_pic %}
+                    <img class="account-img" src="{{ user.profile_pic.url }}" alt="Profile Picture">
+                {% else %}
+                    <div class="account-img-placeholder">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                {% endif %}
             </div>
             <h2 class="account-heading">{{ user.username }}</h2>
             <p class="text-muted">{{ user.email }}</p>
@@ -31,10 +38,34 @@
         }
 
         .account-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
 
-        .profile-image-container:hover .account-img {
+        .account-img-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .account-img-placeholder i {
+            font-size: 48px;
+            color: #adb5bd;
+        }
+
+        .profile-image-container:hover .account-img,
+        .profile-image-container:hover .account-img-placeholder {
             transform: scale(1.05);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }

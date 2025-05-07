@@ -16,11 +16,12 @@ from .views import (
 )
 
 urlpatterns = [
-    path("login/", CustomLoginView.as_view(), name="login"),
-    path("logout/", LogoutView.as_view(), name="logout"),
-    path("register/", CustomRegisterView.as_view(), name="register"),
-    path("about/", AboutView.as_view(), name="about"),
-    path("contact/", ContactView.as_view(), name="contact"),
-    path("profile/", ProfileUpdateView.as_view(), name="profile"),
-    path("home/", Home.as_view(), name="home"),
+    path("", Home.as_view(), name="index"),  # Root URL pattern
+    path("login/", CustomLoginView.as_view(), name="login"),  # Added trailing slash
+    path("logout/", LogoutView.as_view(), name="logout"),  # Added trailing slash
+    path("register/", CustomRegisterView.as_view(), name="register"),  # Added trailing slash
+    path("about/", AboutView.as_view(), name="about"),  # Added trailing slash
+    path("contact/", ContactView.as_view(), name="contact"),  # Added trailing slash
+    path("profile/", ProfileUpdateView.as_view(), name="profile"),  # Added trailing slash
+    path("home/", Home.as_view(), name="home"),  # Added trailing slash
 ]

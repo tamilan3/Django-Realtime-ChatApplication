@@ -160,20 +160,8 @@
 
           <div class="navbar-nav">
             {% if user.is_authenticated %}
-
-            {% comment %} <a class="nav-item nav-link" href="{% url 'assert-create' %}">Add Asset</a> {% endcomment %}
-
-            <a class="nav-item nav-link" href="{% url 'index' %}">Chats</a>
+            <a class="nav-item nav-link" href="{% url 'chat:index' %}">Chats</a>
             <a class="nav-item nav-link" href="{% url 'profile' %}">Profile</a>
-            {% comment %} <div class="dropdown">
-              <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton"
-                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: aliceblue;">
-                Search Assets
-              </button>
-              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <a class="dropdown-item">Assets</a>
-              </div>
-            </div> {% endcomment %}
             <a class="nav-item nav-link" href="{% url 'logout' %}">Logout</a>
             {% else %}
             <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
